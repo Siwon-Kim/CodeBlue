@@ -243,6 +243,8 @@ export class RequestsService {
     console.log('4. waitingForJobCompleted() 진입');
     return new Promise((resolve, reject) => {
       console.log('5. Promise 진입');
+
+      // 1. 일정 시간이 지난 후에 콜백함수를 실행하는 함수
       // wait으로 들어와 2초짜리 setTimeout() 함수가 설정된다
       const wait = setTimeout(() => {
         console.log('** setTimeout() 진입');
@@ -252,23 +254,26 @@ export class RequestsService {
         });
       }, time * 1000); // 2초가 지나도 비지니스로직이 수행 완료되었다는 이벤트 알림이 없으면, 실패 메시지를 반환
 
+      // 2.
       // wait과 동시에 this.eventEmitter에 전달받은 eventName에 대해 콜백함수로 세팅된다
-      const listenEvent = ({
+      const listeningCallback = ({
         success,
         exception,
       }: {
         success: boolean;
         exception?: HttpException;
       }) => {
-        console.log('7. listenFn 진입');
-        clearTimeout(wait);
-        this.eventEmitter.removeAllListeners(eventName);
+        console.log('7. listeningCallback 진입');
+        clearTimeout(wait); // setTimeout 취소
+        this.eventEmitter.removeAllListeners(eventName); // 해당 이벤트에 등록된 모든 리스너를 제거
         success ? resolve({ hospital }) : reject(exception); // 비지니스로직이 성공했으면 resolve, 실패했으면 reject
       };
+
+      // 3.
       console.log('6. this.eventEmitter.addListener 세팅');
       // sendRequest()에서 전해준 비지니스로직이 성공이든 실패든,
       // 기다리고 있던 waitingForJobCompleted()의 이벤트 리스너가 이벤트를 전달받아, 클라이언트에 응답을 보낼 수 있다
-      this.eventEmitter.addListener(eventName, listenEvent);
+      this.eventEmitter.addListener(eventName, listeningCallback); // 이벤트 리스너 등록
     });
   }
 
@@ -360,9 +365,9 @@ export class RequestsService {
   }
 
   // 환자의 중증도와 연령대에 따라 우선적으로 처리되어야 할 job에 priority를 부여하는 메서드
+  // priority 숫자가 높을 수록 우선순위가 낮다 (1, 2, 3, ... - integer) => 1이 가장 높음
   getPriority = (report: Reports): number => {
     const { symptom_level, age_range } = report;
-    const symptomLevel = 6 - symptom_level;
 
     const ageRangeMap: { [key: string]: number } = {
       임산부: 1,
@@ -372,7 +377,7 @@ export class RequestsService {
       성인: 5,
     };
 
-    return !age_range ? symptomLevel : symptomLevel * ageRangeMap[age_range];
+    return !age_range ? symptom_level : symptom_level * ageRangeMap[age_range];
   };
 
   // bullqueue UI dashboard를 위한 메서드
