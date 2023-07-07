@@ -27,8 +27,7 @@ describe('PatientsService Unit Testing', () => {
     };
     const mockTransaction = {
       transaction: jest.fn().mockImplementation((isolationLevel, callback) => {
-        // transaction 메소드에 대한 Mock 구현을 제공합니다.
-        return callback(); // 테스트 시에는 콜백 함수를 실행합니다.
+        return callback(); // callback() is the function passed to transaction()
       }),
     };
 

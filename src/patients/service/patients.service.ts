@@ -20,7 +20,7 @@ export class PatientsService {
     @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {}
 
-  // POST: 환자 정보 입력 API
+  // POST: create patient's information API
   async createPatientInfo(
     report_id: number,
     createPatientInfo: CreatePatientDto,
@@ -31,15 +31,17 @@ export class PatientsService {
         async () => {
           const report = await this.reportsRepository.findReport(report_id);
           if (!report) {
-            throw new NotFoundException('증상 보고서가 존재하지 않습니다.');
+            throw new NotFoundException(
+              'Symptom report provided does not exist.',
+            );
           }
-          // 환자 row 생성
+          // create new patient row
           const createdPatient =
             await this.patientsRepository.createPatientInfo(createPatientInfo);
 
           const patient_id = createdPatient.patient_id;
 
-          // 증상 보고서 row에 patient_id 추가
+          // add patient_id in report row of Reports table
           await this.reportsRepository.addPatientIdInReport(
             report_id,
             patient_id,
@@ -53,13 +55,13 @@ export class PatientsService {
         throw error;
       }
       throw new HttpException(
-        '환자 정보 입력에 실패하였습니다.',
+        "Failed to create patient's information.",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  // PATCH: 환자 정보 수정 API
+  // PATCH: update patient's information API
   async updatePatientInfo(
     patient_id: number,
     updatedPatient: UpdatePatientDto,
@@ -67,7 +69,7 @@ export class PatientsService {
     try {
       const report = await this.patientsRepository.findPatient(patient_id);
       if (!report) {
-        throw new NotFoundException('증상 보고서가 존재하지 않습니다.');
+        throw new NotFoundException('Symptom report provided does not exist.');
       }
       return this.patientsRepository.updatePatientInfo(
         patient_id,
@@ -78,7 +80,7 @@ export class PatientsService {
         throw error;
       }
       throw new HttpException(
-        '환자 정보 수정에 실패하였습니다.',
+        "Failed to update patient's information.",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

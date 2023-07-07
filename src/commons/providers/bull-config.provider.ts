@@ -13,8 +13,6 @@ export class BullConfigProvider implements SharedBullConfigurationFactory {
     return {
       redis: {
         maxRetriesPerRequest: 20,
-        // host: this.configService.get('REDIS_BULL_HOST'),
-        // port: parseInt(this.configService.get('REDIS_BULL_PORT')),
         host: this.configService.get('REDIS_HOST'),
         port: parseInt(this.configService.get('REDIS_PORT')),
         username: this.configService.get('REDIS_USERNAME'),

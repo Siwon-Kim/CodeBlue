@@ -26,7 +26,7 @@ export class ReportsService {
     @Inject(appConfig.KEY) private config: ConfigType<typeof appConfig>,
   ) {}
 
-  // POST: 증상 보고서 생성 API
+  // POST: create symptom report API
   async createReport(
     createReportDto: CreateReportDto,
     patient_rrn: string,
@@ -36,21 +36,21 @@ export class ReportsService {
       return await this.entityManager.transaction(
         'READ COMMITTED',
         async () => {
-          // 환자 주민등록번호가 함께 전달된 경우, Patients table에 환자 정보 저장
+          // when patient SSN is passed together, save patient's info in Patients table
           if (patient_rrn) {
             const patient = await this.patientsRepository.findByRRN(
               patient_rrn,
             );
             let patientId: number;
 
-            // 환자 정보가 없는 경우
+            // if there is no existing patient with patient_rrn
             if (!patient) {
-              // 주민등록번호로 gender 판별
+              // get gender through provided patient_rrn
               const gender = await this.getGender(patient_rrn);
 
               let newPatient: Patients;
 
-              // 환자 이름도 함께 전달된 경우 이름까지 저장
+              // if patient's name delivered together, save name as well
               if (name) {
                 newPatient = await this.patientsRepository.createPatientInfo({
                   patient_rrn,
@@ -58,7 +58,7 @@ export class ReportsService {
                   name,
                 });
               }
-              // 주민번호만 전달된 경우
+              // if only patient_rrn delivered (without name)
               else {
                 newPatient = await this.patientsRepository.createPatientInfo({
                   patient_rrn,
@@ -67,7 +67,7 @@ export class ReportsService {
               }
               patientId = newPatient.patient_id;
             }
-            // 환자 정보가 이미 있는 경우
+            // if there is already existing patient with patient_rrn
             else {
               patientId = patient.patient_id;
 
@@ -81,10 +81,10 @@ export class ReportsService {
             createReportDto.patient_id = patientId;
           }
 
-          // Reports table에 report 저장
+          // save report in Reports table
           const { symptoms } = createReportDto;
 
-          // 중증도 레벨 판단 AI 서버 호출
+          // call symptom severity prediction AI server to get emergency level
           const emergencyLevel = await this.callAIServerForEmergencyLevel(
             symptoms,
           );
@@ -95,35 +95,35 @@ export class ReportsService {
       );
     } catch (error) {
       throw new HttpException(
-        error.response || '증상 보고서 생성에 실패하였습니다.',
+        error.response || 'Failed to create symptom report.',
         error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  // GET: 증상보고서 상세 조회 API
+  // GET: detailed symptom report API
   async getReportDetails(report_id: number): Promise<object> {
     const report = await this.reportsRepository.findReport(report_id);
     if (!report) {
-      throw new NotFoundException('일치하는 증상 보고서가 없습니다');
+      throw new NotFoundException('Symptom report provided does not exist.');
     }
 
     let result: object;
-    // 환자와 병원 정보가 없을 떄
+    // patient and hospital info not found
     if (!report.hospital_id && !report.patient_id) {
       result = report;
     }
-    // 환자 정보만 있을 때
+    // patient info only
     else if (!report.hospital_id && report.patient_id) {
       result = await this.reportsRepository.getReportwithPatientInfo(report_id);
     }
-    // 병원 정보만 있을 때
+    // hospital info only
     else if (report.hospital_id && !report.patient_id) {
       result = await this.reportsRepository.getReportwithHospitalInfo(
         report_id,
       );
     }
-    // 환자와 병원 정보가 모두 있을 때
+    // patient and hospital info both exist
     else {
       result = await this.reportsRepository.getReportwithPatientAndHospitalInfo(
         report_id,
@@ -133,7 +133,7 @@ export class ReportsService {
     return result;
   }
 
-  // PATCH: 증상 보고서 수정 API
+  // PATCH: update symptom report API
   async updateReport(
     report_id: number,
     updateReportDto: UpdateReportDto,
@@ -141,10 +141,10 @@ export class ReportsService {
     try {
       const report = await this.reportsRepository.findReport(report_id);
       if (!report) {
-        throw new NotFoundException('증상 보고서가 존재하지 않습니다.');
+        throw new NotFoundException('Symptom report provided does not exist.');
       }
 
-      // symptoms 문장이 변경된 경우 symptoms_level 재계산
+      // if symptoms sentence is changed, get another emergency level
       if (updateReportDto.symptoms) {
         const emergencyLevel = await this.callAIServerForEmergencyLevel(
           updateReportDto.symptoms,
@@ -158,13 +158,13 @@ export class ReportsService {
         throw error;
       }
       throw new HttpException(
-        '증상 보고서 수정에 실패하였습니다.',
+        'Failed to update symptom report.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  // 배포된 Flask 서버에 증상 문장을 전달하여 응급도를 얻는 메서드
+  // Method: get emergency level through AI server that predicts the severity through the symptom sentence provided
   async callAIServerForEmergencyLevel(symptoms: string) {
     const emergencyLevelApiResponse = await axios.get(this.config.aiServerUrl, {
       params: {
@@ -175,7 +175,7 @@ export class ReportsService {
     return emergencyLevelApiResponse.data.emergency_level;
   }
 
-  // 입력된 주민등록번호를 바탕으로 성별을 판별하는 메서드
+  // Method: get gender through the patient SSN provided
   async getGender(patient_rrn: string): Promise<Gender> {
     return patient_rrn[7] === '1' || patient_rrn[7] === '3'
       ? Gender.M

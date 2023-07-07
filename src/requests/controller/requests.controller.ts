@@ -19,36 +19,38 @@ export class RequestsController {
   private logger = new Logger('RequestsController');
   constructor(private requestsService: RequestsService) {}
 
-  // GET: 이송 신청된 증상보고서 전체 조회 API
+  // GET: all transfer registered symptom reports API
   @Get()
   getAllRequests(): Promise<Reports[]> {
-    this.logger.verbose('증상 보고서 전체 조회 GET API');
+    this.logger.verbose(
+      'Getting all transfer registered symptom reports GET API',
+    );
     return this.requestsService.getAllRequests();
   }
 
-  // POST: 환자 이송 신청 API
+  // POST: request patient transfer to the hosptial API
   @Post('/:report_id/:hospital_id')
   sendRequest(
     @Param('report_id') report_id: number,
     @Param('hospital_id') hospital_id: number,
   ): Promise<object> {
-    this.logger.verbose('환자 이송 신청 POST API');
+    this.logger.verbose('Requesting patient transfer to the hosptial POST API');
     return this.requestsService.addToRequestQueue(report_id, hospital_id);
   }
 
-  // DELETE: 환자 이송 신청 철회 API
+  // DELETE: withdraw patient transfer request API
   @Delete('/:report_id')
   withdrawRequest(@Param('report_id') report_id: number): Promise<object> {
-    this.logger.verbose('환자 이송 신청 철회 DELETE API');
+    this.logger.verbose('Withdrawing patient transfer request DELETE API');
     return this.requestsService.withdrawRequest(report_id);
   }
 
-  // GET: 이송 신청된 증상보고서 검색 API
+  // GET: search transfer registered symptom reports with keywords API
   @Get('/search')
   @Render('searchResult')
   async getSearchRequests(@Query() queries: object): Promise<object> {
     try {
-      this.logger.verbose('증상 보고서 검색 GET API');
+      this.logger.verbose('Searching symptom reports GET API');
       const searchedData = await this.requestsService.getSearchRequests(
         queries,
       );

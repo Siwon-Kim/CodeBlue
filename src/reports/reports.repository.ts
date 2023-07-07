@@ -10,7 +10,7 @@ export class ReportsRepository extends Repository<Reports> {
     super(Reports, dataSource.createEntityManager());
   }
 
-  // 증상 보고서 생성
+  // create symptom report
   async createReport(createReportDto: CreateReportDto): Promise<Reports> {
     const { ...createReportDtoWithOutPatient } = createReportDto;
     const report = this.create({
@@ -19,7 +19,7 @@ export class ReportsRepository extends Repository<Reports> {
     return this.save(report);
   }
 
-  // 증상 보고서 상세 조회 (보고서 + 환자 정보)
+  // query detailed symptom report (report + patient info)
   async getReportwithPatientInfo(report_id: number): Promise<object> {
     const report = await this.query(
       `
@@ -44,7 +44,7 @@ export class ReportsRepository extends Repository<Reports> {
     return report[0];
   }
 
-  // 증상 보고서 상세 조회 (보고서 + 병원 정보)
+  // query detailed symptom report (report + hospital info)
   async getReportwithHospitalInfo(report_id: number): Promise<object> {
     const result = await this.query(
       `
@@ -69,7 +69,7 @@ export class ReportsRepository extends Repository<Reports> {
     return result[0];
   }
 
-  // 증상 보고서 상세 조회 (보고서 + 환자 정보 + 병원 정보)
+  // query detailed symptom report (report + patient info + hospital info)
   async getReportwithPatientAndHospitalInfo(
     report_id: number,
   ): Promise<object> {
@@ -100,14 +100,14 @@ export class ReportsRepository extends Repository<Reports> {
     return result[0];
   }
 
-  // 해당 report_id 의 증상 보고서 조회
+  // query symptom report with report_id
   async findReport(report_id: number): Promise<Reports | undefined> {
     return await this.findOne({
       where: { report_id },
     });
   }
 
-  // 해당 report_id 의 증상 보고서 수정
+  // update symptom report with report_id
   async updateReport(
     report_id: number,
     updatedReport: UpdateReportDto,
@@ -116,7 +116,7 @@ export class ReportsRepository extends Repository<Reports> {
       where: { report_id },
     });
 
-    // updatedReport의 필드를 하나씩 꺼내서 report에 넣어준다.
+    // get each field of updatedReport and put it into report
     for (const field in updatedReport) {
       if (updatedReport.hasOwnProperty(field)) {
         report[field] = updatedReport[field];
@@ -126,7 +126,7 @@ export class ReportsRepository extends Repository<Reports> {
     return await report.save();
   }
 
-  // 해당 report_id의 증상보고서를 병원 이송 신청
+  // update is_sent = true (request patient transfer to hospital)
   async updateReportBeingSent(report_id: number): Promise<Reports> {
     const report = await this.findOne({
       where: { report_id },
@@ -135,7 +135,7 @@ export class ReportsRepository extends Repository<Reports> {
     return await report.save();
   }
 
-  // 해당 report_id의 증상보고서를 병원 이송 철회
+  // update is_sent = false (withdraw patient transfer to hospital)
   async updateReportBeingNotSent(report_id: number): Promise<Reports> {
     const report = await this.findOne({
       where: { report_id },
@@ -144,12 +144,12 @@ export class ReportsRepository extends Repository<Reports> {
     return await report.save();
   }
 
-  // 모든 이송 신청 증상보고서 조회
+  // query all transferred symptom reports
   async getAllRequests(): Promise<Reports[]> {
     return await this.find({ where: { is_sent: true } });
   }
 
-  // 해당 report_id의 증상보고서를 해당 hospitals_id의 병원으로 이송 신청
+  // update hospital_id of symptom report (request patient transfer to hospital)
   async addTargetHospital(
     report_id: number,
     hospital_id: number,
@@ -162,7 +162,7 @@ export class ReportsRepository extends Repository<Reports> {
     await report.save();
   }
 
-  // 해당 report_id의 증상보고서를 해당 hospitals_id의 병원으로 이송 철회
+  // update hospital_id of symptom report to null (withdraw patient transfer to hospital)
   async deleteTargetHospital(report_id: number): Promise<void> {
     const report = await this.findOne({
       where: { report_id },
@@ -172,7 +172,7 @@ export class ReportsRepository extends Repository<Reports> {
     await report.save();
   }
 
-  // 해당 report_id의 증상보고서에 환자 정보 추가
+  // add patient_id in symptom report
   async addPatientIdInReport(
     report_id: number,
     patient_id: number,

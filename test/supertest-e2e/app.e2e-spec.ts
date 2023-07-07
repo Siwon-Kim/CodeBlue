@@ -9,21 +9,18 @@ import { MysqlConfigProvider } from '../../src/commons/providers/typeorm-config.
 import { Hospitals } from '../../src/hospitals/hospitals.entity';
 import { BloodType, AgeRange } from '../../src/reports/reports.enum';
 
-// !!!!!!!! e2e test 전 반드시 .env 파일의 mode를 test로 변경해주어야합니다 !!!!!!!!
-
 /** 
- 어플리케이션 동작 과정
- 0. 병원 데이터 추가 /hospital
- 유저 플로우
- 1. 증상 보고서 입력 /report
- 2. 환자 정보 입력 /patient/:report_id
- 3. 환자 정보 수정 /patient/:patient_id
- 4. 병원 조회 /hospital/:report_id
- 5. 환자 이송 신청 /request/:report_id/:hospital_id
- 6. 증상 보고서 검색 및 리스트 조회 /request/search
- 7. 증상 보고서 상세 조회 /report/:report_id
- 8. 증상 보고서 수정 /report/:report_id
- 9. 환자 이송 신청 철회 /report/:report_id
+****Application Flow and User Flow****
+> 0.  Add hospital data /hospital
+> 1. Input symptom report /report
+> 2. Enter patient information /patient/:report_id
+> 3. Modify patient information /patient/:patient_id
+> 4. Retrieve hospital information /hospital/:report_id
+> 5. Request patient transfer /request/:report_id/:hospital_id
+> 6. Search and list symptom reports /request/search
+> 7. View symptom report details /report/:report_id
+> 8. Modify symptom report /report/:report_id
+> 9. Withdraw patient transfer request /report/:report_id
 */
 
 describe('CodeBLUE E2E Test', () => {
@@ -31,7 +28,7 @@ describe('CodeBLUE E2E Test', () => {
   let hospitalsRepository: Repository<Hospitals>; // Hospitals 데이터를 추가해주는 POST API는 존재하지 않고, DB에 미리 저장해놓기 때문에 직접 db에 접근하기 위해 추가
 
   beforeAll(async () => {
-    // test용 DB 연결
+    // test DB connection
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         AppModule,
@@ -54,19 +51,19 @@ describe('CodeBLUE E2E Test', () => {
 
     await app.init();
 
-    // 병원 미리 추가해주기
+    // add hospitals in advance
     hospitalsRepository = moduleFixture.get('HospitalsRepository');
     await hospitalsRepository.query(`
       CREATE SPATIAL INDEX spatial_index ON hospitals(point);
-    `); // point column에 nullable = false로 설정해주어야함
+    `);
     await hospitalsRepository.query(`
       INSERT INTO hospitals (name, address, phone, available_beds, latitude, longitude, emogList, point)
       VALUES ('가톨릭대학교여의도성모병원', '서울특별시 영등포구 63로 10, 여의도성모병원 (여의도동)', '02-3779-1188', 10, 37.51827233800711, 126.93673129599131, 'A1100011', POINT(126.93673129599131, 37.51827233800711));
-    `); // 가용 병상이 있는 병원
+    `); // with available beds
     await hospitalsRepository.query(`
       INSERT INTO hospitals (name, address, phone, available_beds, latitude, longitude, emogList, point)
       VALUES ('강원도강릉의료원', '강원도 강릉시 경강로 2007 (남문동)', '033-610-1200', 0, 37.7493104200, 128.8887963000, 'A2200011', POINT(128.8887963000, 37.7493104200));
-    `); // 가용 병상이 없는 병원
+    `); // without available beds
   });
 
   afterAll(async () => {
@@ -218,7 +215,7 @@ describe('CodeBLUE E2E Test', () => {
         .send({
           blood_type: BloodType.A,
           blood_pressure: '120/80',
-          age_range: AgeRange.임산부,
+          age_range: AgeRange['Pregnant Woman'],
         })
         .expect(200);
     });

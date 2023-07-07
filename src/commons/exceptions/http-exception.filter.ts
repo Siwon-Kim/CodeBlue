@@ -11,7 +11,7 @@ export class HttpExceptionFilter {
       | string
       | { error: string; statusCode: number; message: string | string[] };
 
-    // 우리가 설정한 throw new HttpException()의 경우
+    // throw new HttpException() that we defined
     if (typeof error === 'string') {
       response.status(status).json({
         success: false,
@@ -21,7 +21,7 @@ export class HttpExceptionFilter {
         path: request.url,
       });
     }
-    // nest 자체에서 처리해주는 error handling의 경우
+    // error handling that Nest.js handles itself
     else {
       response.status(status).json({
         success: false,

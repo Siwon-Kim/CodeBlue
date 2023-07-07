@@ -15,7 +15,7 @@ export class HospitalsController {
   private logger = new Logger('HospitalsController');
   constructor(private hospitalsService: HospitalsService) {}
 
-  // GET: 병원 추천 및 병상 조회 (종합상황판 기반) API
+  // GET: Recommended hospitals and real-time available beds for each hospital API
   @Get('/:report_id')
   @UseInterceptors(CacheInterceptor)
   @Render('recommendedHospitals')
@@ -33,7 +33,7 @@ export class HospitalsController {
     }
   }
 
-  // GET: 주변 병원 조회 API
+  // GET: Nearby hospitals information API
   @Get('/nearby/site')
   @Render('nearbyHospitals')
   async getNearbyHospitals(@Query() queries: object): Promise<object> {

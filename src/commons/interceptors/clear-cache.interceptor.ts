@@ -18,10 +18,9 @@ export class ClearCacheInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    // 이송 신청 & 철회 요청인 경우 캐시 삭제
     if (this.isRequestPostOrDelete(context)) {
       const request = context.switchToHttp().getRequest();
-      console.log('request.params.report_id:', request.params.report_id);
+      // 1. pass report_id to the method
       await this.clearCacheKeysStartingWith(request.params.report_id);
     }
     return next.handle();
@@ -29,13 +28,14 @@ export class ClearCacheInterceptor implements NestInterceptor {
 
   private async clearCacheKeysStartingWith(reportId: string): Promise<void> {
     const cacheKeys = await this.getCacheKeysStartingWith(reportId);
-    console.log('before Clear - cacheKeys:', cacheKeys);
+    // 4. map all filtered keys to delete from Redis
     await Promise.all(cacheKeys.map((key) => this.cacheManager.del(key)));
   }
 
   private async getCacheKeysStartingWith(prefix: string): Promise<string[]> {
+    // 2. get all keys in Redis
     const cacheKeys = await this.cacheManager.store.keys('*');
-    console.log('cacheKeys:', cacheKeys);
+    // 3. filter keys that starts with report_id: of all keys
     return cacheKeys.filter((key) => key.startsWith(`${prefix}:`));
   }
 

@@ -19,23 +19,22 @@ export class CacheInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    // 추천 병원 조회 GET 요청인 경우에만 캐시 적용
+    // Allow only GET request
     if (this.isRequestGet(context)) {
       const request = context.switchToHttp().getRequest();
       const cacheKey = this.generateCacheKey(request);
       console.log('cacheKey:', cacheKey);
-      // 캐시 데이터 확인
+      // check if cached data exists
       const cachedData = await this.cacheManager.get(cacheKey);
       if (cachedData) {
-        console.log('캐시된 데이터를 사용합니다.');
+        console.log('Returning cached data.');
         return of(cachedData);
       }
 
-      // 캐시된 데이터가 없는 경우 요청 처리
+      // If there is no cached data
       return next.handle().pipe(
         tap((data) => {
-          // 데이터를 캐시에 저장
-          console.log('캐시에 데이터를 저장합니다.');
+          console.log('Saving data in Redis.');
           this.cacheManager.set(cacheKey, data);
         }),
       );
@@ -43,7 +42,7 @@ export class CacheInterceptor implements NestInterceptor {
   }
 
   private generateCacheKey(request): string {
-    // 요청 URL과 쿼리 파라미터를 기반으로 고유한 캐시 키 생성
+    // create unique key for Redis using request URL and query strings
     const reportId = request.params.report_id;
     const radius = request.query.radius;
     const maxCount = request.query.max_count;

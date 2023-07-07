@@ -8,8 +8,8 @@ import { HospitalsRepository } from '../hospitals.repository';
 import { ReportsRepository } from '../../reports/reports.repository';
 import { Crawling } from '../../commons/middlewares/crawling';
 import { KakaoMapService } from '../../commons/providers/kakao-map.provider';
-import { InjectEntityManager } from '@nestjs/typeorm'; //transaction사용을 위한 모듈 임포트
-import { EntityManager } from 'typeorm'; //transaction사용을 위한 모듈 임포트
+import { InjectEntityManager } from '@nestjs/typeorm'; // for transaction
+import { EntityManager } from 'typeorm'; // for transaction
 
 @Injectable()
 export class HospitalsService {
@@ -18,10 +18,10 @@ export class HospitalsService {
     private reportsRepository: ReportsRepository,
     private crawling: Crawling,
     private kakaoMapService: KakaoMapService,
-    @InjectEntityManager() private readonly entityManager: EntityManager, // 트랜젝션을 위해 DI
+    @InjectEntityManager() private readonly entityManager: EntityManager, // DI for transaction
   ) {}
 
-  // GET: 병원 추천 및 병상 조회 (종합상황판 기반) API
+  // GET: Recommended hospitals and real-time available beds for each hospital API
   async getRecommendedHospitals(
     report_id: number,
     queries: object,
@@ -32,9 +32,7 @@ export class HospitalsService {
         async () => {
           const report = await this.reportsRepository.findReport(report_id);
           if (!report) {
-            throw new NotFoundException(
-              `해당 아이디: ${report_id}는 존재하지 않습니다.`,
-            );
+            throw new NotFoundException(`${report_id} does not exist.`);
           }
 
           const startLat = parseFloat(queries['latitude']);
@@ -47,7 +45,7 @@ export class HospitalsService {
             ? parseInt(queries['max_count'])
             : 20;
 
-          // 사용자 위치 기반 추천 병원 DB에서 받아오기
+          // get recommended hospitals based on the user's location from DB
           if (queries['radius']) {
             radius = parseInt(queries['radius']) * 1000; // radius in meters
             dataSource =
@@ -65,16 +63,18 @@ export class HospitalsService {
           }
 
           if (dataSource.length === 0) {
-            throw new NotFoundException('해당 반경 내에 병원이 없습니다.');
+            throw new NotFoundException(
+              'No available hospitals within radius.',
+            );
           }
 
-          hospitals = Object.entries(dataSource); // 배열로 반환
+          hospitals = Object.entries(dataSource);
 
           if (max_count < hospitals.length) {
-            hospitals = hospitals.slice(0, max_count); // 사용자가 원하는 만큼만 뱡원 추천
+            hospitals = hospitals.slice(0, max_count); // get the number of hospitals that the user customized
           }
 
-          // 카카오 mobility API적용 최단시간 거리 계산 (병렬 처리)
+          // Kakao mobility API for getting duration between the current location and the hospital by car (Parallel Processing)
           const promises = hospitals.map(async (hospital) => {
             const endLat = hospital[1]['latitude'];
             const endLng = hospital[1]['longitude'];
@@ -90,9 +90,7 @@ export class HospitalsService {
             const distance = result['distance'];
 
             if (!duration || !distance) {
-              throw new NotFoundException(
-                '해당 아이디의 위치를 찾을 수 없습니다.',
-              );
+              throw new NotFoundException('Unreachable location provided.');
             }
 
             const minutes = Math.floor(duration / 60);
@@ -100,8 +98,8 @@ export class HospitalsService {
 
             const obj = {
               duration,
-              minutes: `${minutes}분`,
-              seconds: `${seconds}초`,
+              minutes: `${minutes}m`,
+              seconds: `${seconds}s`,
               distance: (distance / 1000).toFixed(1),
               hospital_id: hospital[1]['hospital_id'],
               name: hospital[1]['name'],
@@ -112,17 +110,18 @@ export class HospitalsService {
             return obj;
           });
 
-          // 병렬 처리된 결과를 기다렸다가 변수에 저장
+          // waiting for all parallel processing completed and save into the variable
           let recommendedHospitals = await Promise.all(promises);
 
-          // KaKao Mobility로 구한 거리가 ST_Distance_Sphere로 구한 거리보다 더 큰 경우
+          // when the distance provided by KaKao Mobility is longer than the distance provided by ST_Distance_Sphere
+          // ST_Distance_Sphere is more accurate than KaKao Mobility
           if (queries['radius']) {
             recommendedHospitals = recommendedHospitals.filter(
               (hospital) => parseFloat(hospital['distance']) * 1000 <= radius,
             );
           }
 
-          // 이동 시간 + 가용 병상수를 고려하여 가중치 적용
+          // applying weights considering travel time and available bed capacity
           const weightsRecommendedHospitals = [];
 
           for (const hospital of recommendedHospitals) {
@@ -143,10 +142,10 @@ export class HospitalsService {
             weightsRecommendedHospitals.push(hospital);
           }
 
-          // 최단거리 병원 duration 낮은 순 (단위:sec)
+          // shortest distance hospitals sorted by duration (unit: seconds)
           weightsRecommendedHospitals.sort((a, b) => b.rating - a.rating);
 
-          // 실시간 가용 병상 정보 크롤링
+          // crawling real-time available beds information
           const emogList = [];
           for (const hospital of weightsRecommendedHospitals) {
             emogList.push(hospital['emogList']);
@@ -165,13 +164,13 @@ export class HospitalsService {
             }),
           );
 
-          // FE를 위해 추가된 데이터
+          // data inserted for the use of FE
           const selectedHospital = report.hospital_id
             ? await this.hospitalsRepository.findHospital(report.hospital_id)
             : null;
-          results.unshift(selectedHospital); // 사용자가 선택한 병원 정보 - index 2번 저장
-          results.unshift(report); // 증상보고서 내용 - index 1번 저장
-          results.unshift(datas[0]); // 크롤링 데이터 받아온 timeline - index 0번 저장
+          results.unshift(selectedHospital); // selected hospital information - index 2
+          results.unshift(report); // symptom report content - index 1
+          results.unshift(datas[0]); // timeline when crawling executed - index 0
 
           return results;
         },
@@ -181,15 +180,15 @@ export class HospitalsService {
         throw error;
       }
       throw new HttpException(
-        error.response.data || '병원 조회에 실패하였습니다.',
+        error.response.data ||
+          'Failed to get recommended hospitals information.',
         error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  // GET: 주변 병원 조회 API
+  // GET: Nearby hospitals information API
   async getNearbyHospitals(queries: object): Promise<object> {
-    // parseFloat = 문자열을 부동 소수점 숫자로 변환
     const startLat = parseFloat(queries['latitude']);
     const startLng = parseFloat(queries['longitude']);
 
@@ -212,7 +211,7 @@ export class HospitalsService {
       );
     }
 
-    hospitals = Object.entries(dataSource); // 배열로 반환
+    hospitals = Object.entries(dataSource);
 
     const datas = hospitals.map((data) => {
       const obj = {
@@ -227,7 +226,7 @@ export class HospitalsService {
     return datas;
   }
 
-  // 가중치 점수 계산 메서드
+  // Method: calculate weights considering travel time and available bed capacity
   async calculateRating(
     hospital: any,
     maxDuration: number,
@@ -240,10 +239,10 @@ export class HospitalsService {
     const durationWeight = weights.duration; // 98%
     const available_bedsWeight = weights.available_beds; // 2%
 
-    //duration = 값이 낮을 수록 높은 점수
+    //duration = a lower value corresponds to a higher score
     const durationScore = 1 - hospital.duration / maxDuration;
 
-    //available_beds = 값이 높을 수록 높은 점수
+    //available_beds = a higher value corresponds to a higher score
     const available_bedsScore = hospital.available_beds / maxAvailable_beds;
     const rating =
       durationWeight * durationScore +
@@ -251,18 +250,18 @@ export class HospitalsService {
     return rating;
   }
 
-  // 크롤링 데이터 파싱 메서드
+  // Method: parsing crawling data
   async parseHospitalData(data: string): Promise<object> {
-    const emergencyRoomRegex = /응급실:\s*(\d+(?:\s\/\s\d+)?)/;
-    const surgeryRoomRegex = /수술실:\s*(\d+(?:\s\/\s\d+)?)/;
-    const wardRegex = /입원실:\s*(\d+(?:\s\/\s\d+)?)/;
+    const emergencyRoomRegex = /Emergency Room:\s*(\d+(?:\s\/\s\d+)?)/;
+    const surgeryRoomRegex = /Surgery Room:\s*(\d+(?:\s\/\s\d+)?)/;
+    const wardRegex = /Ward:\s*(\d+(?:\s\/\s\d+)?)/;
     const emergencyRoom = data.match(emergencyRoomRegex);
     const surgeryRoom = data.match(surgeryRoomRegex);
     const ward = data.match(wardRegex);
     return {
-      emergencyRoom: emergencyRoom ? emergencyRoom[1] : '정보없음',
-      surgeryRoom: surgeryRoom ? surgeryRoom[1] : '정보없음',
-      ward: ward ? ward[1] : '정보없음',
+      emergencyRoom: emergencyRoom ? emergencyRoom[1] : 'N/A',
+      surgeryRoom: surgeryRoom ? surgeryRoom[1] : 'N/A',
+      ward: ward ? ward[1] : 'N/A',
     };
   }
 }

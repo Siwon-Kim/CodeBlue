@@ -21,7 +21,7 @@ describe('HospitalsController Unit Testing', () => {
       providers: [
         { provide: HospitalsService, useValue: mockHospitalsService },
         { provide: CACHE_MANAGER, useValue: {} },
-        CacheInterceptor
+        CacheInterceptor,
       ],
     }).compile();
 
@@ -32,10 +32,9 @@ describe('HospitalsController Unit Testing', () => {
 
   describe('getRecommendedHospitals()', () => {
     it('should get recommended Hospitals', async () => {
-      const recommendedHospitals = { "hospitals_data": {} };
-      jest
-        .spyOn(hospitalsService, 'getRecommendedHospitals')
-        // .mockImplementation(() => recommendedHospitals);
+      const recommendedHospitals = { hospitals_data: {} };
+      jest.spyOn(hospitalsService, 'getRecommendedHospitals');
+      // .mockImplementation(() => recommendedHospitals);
 
       expect(await hospitalsController.getRecommendedHospitals()).toEqual(
         recommendedHospitals,
@@ -46,10 +45,9 @@ describe('HospitalsController Unit Testing', () => {
 
   describe('getNearbyHospitals()', () => {
     it('should get nearby Hospitals', async () => {
-      const localHospitals = { "hospitals_data": {} };
-      jest
-        .spyOn(hospitalsService, 'getNearbyHospitals')
-        // .mockImplementation(() => localHospitals);
+      const localHospitals = { hospitals_data: {} };
+      jest.spyOn(hospitalsService, 'getNearbyHospitals');
+      // .mockImplementation(() => localHospitals);
 
       expect(await hospitalsController.getNearbyHospitals()).toEqual(
         localHospitals,

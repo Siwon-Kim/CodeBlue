@@ -36,8 +36,7 @@ describe('RequestsService Unit Testing', () => {
     };
     const mockTransaction = {
       transaction: jest.fn().mockImplementation((isolationLevel, callback) => {
-        // transaction 메소드에 대한 Mock 구현을 제공합니다.
-        return callback(); // 테스트 시에는 콜백 함수를 실행합니다.
+        return callback();
       }),
     };
 
@@ -104,7 +103,7 @@ describe('RequestsService Unit Testing', () => {
         symptom_level: '5',
         site: '경기도',
         name: '홍길동',
-        age_range: '성인',
+        age_range: 'Adult',
       };
 
       jest
@@ -143,7 +142,6 @@ describe('RequestsService Unit Testing', () => {
       const report_id = 1;
       const eventName = 'request.added';
 
-      // Queue에 작업이 추가되었는지 확인합니다.
       requestQueue.add('addRequestQueue', {
         report_id,
         hospital_id,

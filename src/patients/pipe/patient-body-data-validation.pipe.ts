@@ -6,11 +6,11 @@ export class PatientBodyValidationPipe implements PipeTransform {
   transform(value: any): object {
     const rrnRegex = /^\d{6}-\d{7}$/;
 
-    // 주민등록번호 형식 검사
+    // Check patient's SSN format
     if (value.patient_rnn) {
       if (!rrnRegex.test(value.patient_rrn)) {
         throw new BadRequestException(
-          '주민등록번호 형식이 올바르지 않습니다. (예. 000101-1111111)',
+          "Patient's SSN format is incorrect (e.g. 000101-1111111)",
         );
       }
 

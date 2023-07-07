@@ -14,11 +14,11 @@ import appConfig from '../config/app.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(ConfigValidator), // config 설정을 위해 import
+    ConfigModule.forRoot(ConfigValidator),
     TypeOrmModule.forRootAsync({
       useClass: MysqlConfigProvider,
-    }), // mySQL 연결을 위해 import
-    ScheduleModule.forRoot(), // task scheduling을 위해 import
+    }),
+    ScheduleModule.forRoot(),
     ReportsModule,
     HospitalsModule,
     RequestsModule,
@@ -34,7 +34,7 @@ export class AppModule implements NestModule {
   private readonly isDev: boolean =
     this.config.mode === 'development' ? true : false;
 
-  // dev mode일 때 HTTP 요청 로그 남기는 부분
+  // when dev mode, log HTTP request
   configure(consumer: MiddlewareConsumer) {
     if (this.isDev) {
       consumer.apply(HTTPLoggerMiddleware).forRoutes('*');

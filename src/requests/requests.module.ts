@@ -33,7 +33,7 @@ import { CacheModule } from '@nestjs/cache-manager';
   providers: [RequestsService, RequestQueueConsumer, EventEmitter2],
 })
 export class RequestsModule {
-  // bull-board UI 연결을 위한 설정
+  // setting for bull-board UI
   constructor(@InjectQueue('requestQueue') private requestQueue: Queue) {}
 
   configure(consumer: MiddlewareConsumer) {
