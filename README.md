@@ -121,10 +121,10 @@ https://github.com/backEndKwon/CodeBlue/assets/128948886/df25786c-7415-4b66-be66
 
 # 💣 Troubleshooting
 
-1. [Concurrency Control Troubleshooting](https://www.notion.so/siwonmadang/Concurrency-Control-Troubleshooting-32317b3721a34542bf79c6e4b063c73f?pvs=4) <br>
-2. [Distributed Server Troubleshooting](https://www.notion.so/siwonmadang/Troubleshooting-Distributed-Server-Deployment-1290e4c0013f4b6db262eb904898b9ca?pvs=4) <br>
-3. [AI Training and Accuracy Improvement Troubleshooting](https://www.notion.so/siwonmadang/Troubleshooting-AI-Training-and-Implementation-efb61f9a399f4920970e123abe3312d5?pvs=4) <br>
-4. [Distance-based Hospital Recommendation Troubleshooting](https://www.notion.so/siwonmadang/Improving-the-Time-Required-for-Distance-based-Hospital-Search-df3295a004074b1b910913fe1ca9748b?pvs=4)
+1. Concurrency Control Troubleshooting: [Description](https://www.notion.so/siwonmadang/Concurrency-Control-Troubleshooting-32317b3721a34542bf79c6e4b063c73f?pvs=4) <br>
+2. Distributed Server Troubleshooting: [Description](https://www.notion.so/siwonmadang/Troubleshooting-Distributed-Server-Deployment-1290e4c0013f4b6db262eb904898b9ca?pvs=4) <br>
+3. AI Training and Accuracy Improvement Troubleshooting: [Description](https://www.notion.so/siwonmadang/Troubleshooting-AI-Training-and-Implementation-efb61f9a399f4920970e123abe3312d5?pvs=4) <br>
+4. Distance-based Hospital Recommendation Troubleshooting: [Description](https://www.notion.so/siwonmadang/Improving-the-Time-Required-for-Distance-based-Hospital-Search-df3295a004074b1b910913fe1ca9748b?pvs=4)
 
 <br>
 
