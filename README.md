@@ -6,7 +6,7 @@
 
 #### 🏠 Deployed Service : [CodeBLUE](https://codeblue.site/)
 #### 🧑🏾‍💻 Portfolio : [Notion](https://www.notion.so/siwonmadang/CodeBLUE-b89c9278c48146949316f799f3f93ced?pvs=4)
-#### 🥇 Awards: <strong>First Place</strong> in HangHae 99 Web Dev Camp (out of 22 projects) based on evaluations from Senior Mentors and Judges.
+#### 🥇 Awards: <strong>First Place</strong> in HangHae 99 Web Dev BootCamp (out of 22 projects) based on evaluations from Senior Mentors and Judges.
 <details>
 <summary> AWARD in Korean </summary>
 <div markdown="1">
